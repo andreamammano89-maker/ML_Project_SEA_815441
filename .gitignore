@@ -1,8 +1,15 @@
-*data/
-*.csv
-*.xlsx
-*.venv/
+# Virtual environments
+.venv/
 *pyvenv.cfg
-*DS_Store
-*__pycache__/
-*.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+
+# Python
+__pycache__/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Executed notebook (large, reproducible)
+main_executed.ipynb
