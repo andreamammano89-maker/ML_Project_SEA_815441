@@ -45,7 +45,7 @@ We built a `ColumnTransformer` with two branches, reused across all model runs. 
 
 ## [Section 3] Experimental Design
 
-### Experiment 1 — Base Models
+### Experiment 1: Base Models
 
 **Purpose:** establish baseline performance and identify which task attributes drive `profit_margin`.
 
@@ -55,7 +55,7 @@ We built a `ColumnTransformer` with two branches, reused across all model runs. 
 
 **Metrics:** Test R², Test MAE (pp), Test RMSE (pp), 5-fold CV R². MAE in percentage points is the most readable: a 30 pp MAE means predictions are off by 30 margin points on average.
 
-### Experiment 2 — Log-transformed Features
+### Experiment 2: Log-transformed Features
 
 **Purpose:** test whether right skew is what limits Linear Regression, or whether the ceiling is structural.
 
