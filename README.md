@@ -6,7 +6,7 @@ Before fitting any model, we excluded variables that cannot legitimately predict
 
 ### Preprocessing
 
-We built a `ColumnTransformer` with two branches, reused across all model runs. Numeric features get median imputation followed by `StandardScaler` — median rather than mean because several variables have heavy right tails we chose not to cap. Categorical features get most-frequent imputation and `OneHotEncoder` with `handle_unknown='ignore'`. Boolean flags (`sla_breach`, `scope_change_flag`, `ai_assisted`, `ai_flag`, `legacy_ai_flag`) are cast to 0/1 integers at load time and treated as numeric. All models use an 80/20 train/test split with `random_state=42`.
+We built a `ColumnTransformer` with two branches, reused across all model runs. Numeric features get median imputation followed by `StandardScaler` (median rather than mean because several variables have heavy right tails we chose not to cap). Categorical features get most-frequent imputation and `OneHotEncoder` with `handle_unknown='ignore'`. Boolean flags (`sla_breach`, `scope_change_flag`, `ai_assisted`, `ai_flag`, `legacy_ai_flag`) are cast to 0/1 integers at load time and treated as numeric. All models use an 80/20 train/test split with `random_state=42`.
 
 ### Models
 
@@ -22,14 +22,14 @@ We built a `ColumnTransformer` with two branches, reused across all model runs. 
 
 ![Model comparison — base dataset](images/model_comparison_s1.png)
 
-**SHAP.** `shap.TreeExplainer` on the tuned RF gives exact Shapley values on the held-out test set. We produced a beeswarm plot (top 15 features by mean |SHAP|) and a dependence plot for `ai_usage_pct`. A cross-check table then compares Lasso-retained features against the SHAP top 15 to flag predictors that are consistent across both methods — those are the ones we trust most.
+**SHAP.** `shap.TreeExplainer` on the tuned RF gives exact Shapley values on the held-out test set. We produced a beeswarm plot (top 15 features by mean |SHAP|) and a dependence plot for `ai_usage_pct`. A cross-check table then compares Lasso-retained features against the SHAP top 15 to flag predictors that are consistent across both methods (those are the ones we trust most).
 
 ![SHAP beeswarm — base dataset](images/shap_beeswarm_s1.png)
 ![SHAP dependence plot — ai_usage_pct (base)](images/shap_dependence_ai_s1.png)
 
 ### Log-transformation
 
-`hours_spent` (skew 9.95), `rework_hours` (7.76), `cost` (5.54), and `revenue` (4.72) are heavily right-skewed, and OLS is sensitive to this in a way RF is not. We applied `np.log1p` to seven features where compression preserves interpretability: `hours_spent`, `billable_hours`, `rework_hours`, `revenue`, `cost`, `errors`, `revisions`. The target and everything else are untouched. The full pipeline then reruns on `df_log` with the same split and hyperparameter grid. RF is invariant to monotonic transformations, so its results on `df_log` are a sanity check — if RF performance shifts, something in our setup is wrong.
+`hours_spent` (skew 9.95), `rework_hours` (7.76), `cost` (5.54), and `revenue` (4.72) are heavily right-skewed, and OLS is sensitive to this in a way RF is not. We applied `np.log1p` to seven features where compression preserves interpretability: `hours_spent`, `billable_hours`, `rework_hours`, `revenue`, `cost`, `errors`, `revisions`. The target and everything else are untouched. The full pipeline then reruns on `df_log` with the same split and hyperparameter grid. RF is invariant to monotonic transformations, so its results on `df_log` are a sanity check: if RF performance shifts, something in our setup is wrong.
 
 ![Original vs log-transformed distributions](images/log_distribution_comparison.png)
 
