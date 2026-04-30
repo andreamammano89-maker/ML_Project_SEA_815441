@@ -61,4 +61,38 @@ We built a `ColumnTransformer` with two branches, reused across all model runs. 
 
 **Baseline:** LR and RF results from Experiment 1.
 
-**Comparison:** same models on `df_log`. RF serves as a built-in control — because it depends only on value ordering, `log1p` cannot change its predictions. If LR R² rises while RF R² stays flat, the gain came from fixing the distribution and nothing else. We set +0.03 in LR R² as the threshold for concluding that skew was a material constraint. The delta column (Δ R², Log − Base) makes the comparison explicit.
+**Comparison:** same models on `df_log`. RF serves as a built-in control, because it depends only on value ordering and `log1p` cannot change its predictions. If LR R² rises while RF R² stays flat, the gain came from fixing the distribution and nothing else. We set +0.03 in LR R² as the threshold for concluding that skew was a material constraint. The delta column (Δ R², Log − Base) makes the comparison explicit.
+
+## [Section 4] Results
+
+### Model Performance
+
+Across both experiments, the tuned Random Forest is the best-performing model. On the base dataset it reaches a test R² of **0.3445**, MAE of 27.64 pp, and RMSE of 44.08 pp. Linear Regression on Lasso-selected features scores R² = 0.2048, MAE = 32.06 pp. A meaningful gap can be observed, whuch tells us the feature-margin relationship has non-linear structure that OLS cannot capture.
+
+Neither result is surprising given what the dataset contains. Roughly 65% of `profit_margin` variance is driven by things we do not observe: client pricing power, competitive dynamics, individual worker skill.
+
+![Model comparison — base dataset](images/model_comparison_s1.png)
+
+### What the Log-transform Experiment Tells Us
+
+Running the same pipeline on `df_log`, where seven right-skewed features were compressed with `np.log1p`, produces a clean result. LR R² rises from 0.2048 to **0.2487** (+0.0439), and MAE drops by 1.41 pp. RF R² stays at exactly 0.3445, delta = 0.0000.
+
+The zero RF delta is the point. RF is invariant to monotonic transformations by construction, so its flat result confirms that the LR gain came entirely from fixing the distribution and not from any difference in data or setup. Right skew was genuinely constraining OLS, and the log transform partially fixes it. The remaining gap between LR (0.2487) and RF (0.3445) after the transform is non-linearity that no distributional correction can close.
+
+![Model comparison — base vs log-transformed](images/model_comparison_s2.png)
+
+### What SHAP Says About the Margin Drivers
+
+The SHAP rankings are identical across both dataset versions: same 15 features, same order, mean |SHAP| values matching to four decimal places. That stability matters because it rules out scale artefacts and confirms the Section 1 interpretation is genuine.
+
+The three dominant predictors are `pricing_model_hourly` (mean |SHAP| = 15.23), `billable_ratio` (12.49), and `seniority_senior` (10.15). `ai_usage_pct` ranks 14th at 0.70. Those findings reveal that `ai_usage_pct` is detectable, but small relative to structural factors.
+
+![SHAP beeswarm — base dataset](images/shap_beeswarm_s1.png)
+
+The dependence plot for `ai_usage_pct` shows SHAP values rising steadily with AI usage intensity, which is consistent with the EDA threshold finding. But the interaction colour tells the more important story: the positive effect is attenuated for hourly-billed tasks (pink) and amplified for non-hourly ones (blue). AI adoption helps margins, but the pricing contract determines whether the gain stays with the agency or flows to the client as reduced billable hours.
+
+![SHAP dependence plot — ai_usage_pct](images/shap_dependence_ai_s1.png)
+
+### Cross-check: Lasso vs SHAP
+
+11 of the 15 SHAP top features were also retained by Lasso, confirming that the dominant margin drivers are consistent across linear and non-linear methods. The four features in the SHAP top 15 but zeroed by Lasso (`ai_usage_pct`, `outcome_score`, `complexity_bucket_low`, `seniority_mid`) contribute through non-linear effects that L1 penalisation cannot detect. The fact that `ai_usage_pct` falls into this category is consistent with the threshold pattern from the EDA: its relationship with margin is non-linear, which is exactly why a linear selector misses it.
