@@ -63,11 +63,13 @@ We built a `ColumnTransformer` with two branches, reused across all model runs. 
 
 **Comparison:** same models on `df_log`. RF serves as a built-in control, because it depends only on value ordering and `log1p` cannot change its predictions. If LR R² rises while RF R² stays flat, the gain came from fixing the distribution and nothing else. We set +0.03 in LR R² as the threshold for concluding that skew was a material constraint. The delta column (Δ R², Log − Base) makes the comparison explicit.
 
+---
+
 ## [Section 4] Results
 
 ### Model Performance
 
-Across both experiments, the tuned Random Forest is the best-performing model. On the base dataset it reaches a test R² of **0.3445**, MAE of 27.64 pp, and RMSE of 44.08 pp. Linear Regression on Lasso-selected features scores R² = 0.2048, MAE = 32.06 pp. A meaningful gap can be observed, whuch tells us the feature-margin relationship has non-linear structure that OLS cannot capture.
+Across both experiments, the tuned Random Forest is the best-performing model. On the base dataset it reaches a test R² of **0.3445**, MAE of 27.64 pp, and RMSE of 44.08 pp. Linear Regression on Lasso-selected features scores R² = 0.2048, MAE = 32.06 pp. A meaningful gap can be observed, which tells us the feature-margin relationship has non-linear structure that OLS cannot capture.
 
 Neither result is surprising given what the dataset contains. Roughly 65% of `profit_margin` variance is driven by things we do not observe: client pricing power, competitive dynamics, individual worker skill.
 
